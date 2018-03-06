@@ -20,7 +20,7 @@ class Game (View.View):
                 ]
 
     def update (self):
-        pass
+        self.board.update ()
 
     def newGame (self):
         print ('starting new game')

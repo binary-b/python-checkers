@@ -23,8 +23,8 @@ while True:
     if not gl.view:
         break
 
-    gl.view.update ()
     gl.screen.fill (Color (0,0,0))
     gl.view.draw ()
+    gl.view.update ()
 
     pygame.display.flip ()

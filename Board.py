@@ -50,20 +50,10 @@ class Board (View.View):
     def applyMove (self):
         backup = self.backup ()
 
-        if len (self.move) == 0:
-            backup = self.backup ()
-            while not self._applyMove ():
-                self.move = []
-                self.move.append (self._randomMove ())
-                self.move.append (self._randomMove ())
-                print ('\n')
-            self.restore (backup)
-
-        print (self.move)
-
         if self._applyMove ():
             self.player = not self.player
             print ('correct move')
+            self.draw ()
         else:
             self.restore (backup)
             print ('incorrect move')
@@ -78,13 +68,13 @@ class Board (View.View):
     def _applyMove (self):
         # check number of moves
         capturing = False
-        if len (self.move) < 1:
+        if len (self.move) < 2:
             return False
         if len (self.move) > 2:
             capturing = True
 
-        # print ('possible captures:', self._capturesOnBoard ())
-        if not capturing and self._capturesOnBoard ():
+        # print ('possible captures:', self._forceCapture ())
+        if not capturing and self._forceCapture ():
             capturing = True
 
         for pos_1, pos_2 in zip (self.move, self.move[1:]):
@@ -94,7 +84,7 @@ class Board (View.View):
                 self._applySingleMove (pos_1, pos_2)
 
         if capturing and self._capturesByPiece (self.move [-1]):
-            print ('forced capture!')
+            # print ('forced capture!')
             return False
 
         self._upgradeToKings ()
@@ -125,22 +115,22 @@ class Board (View.View):
         field_1 = self.board [pos_1[0]][pos_1[1]]
         field_2 = self.board [pos_2[0]][pos_2[1]]
 
-        print ('pos_1:', pos_1, 'pos_2:', pos_2)
+        # print ('pos_1:', pos_1, 'pos_2:', pos_2)
 
         # checking starting position
         if not (field_1 & FIELD and not (self.player ^ bool (field_1 & PLAYER))):
-            print ('invalid start position')
+            # print ('invalid start position')
             return False
 
         # checking end position
         if field_2 & FIELD:
-            print ('invalid end position')
+            # print ('invalid end position')
             return False
 
         # checking if move on single diagonal
         if not (pos_1[0] + pos_1[1] == pos_2[0] + pos_2[1]
                 or pos_1[0] - pos_1[1] == pos_2[0] - pos_2[1]):
-            print ('not on diagonal')
+            # print ('not on diagonal')
             return False
 
         # if man is moving
@@ -148,17 +138,17 @@ class Board (View.View):
             d_y = pos_1[0] - pos_2[0]
             if abs (d_y) == 1:
                 if capturing:
-                    print ('man: forced capturing')
+                    # print ('man: forced capturing')
                     return False
 
                 # check direction
                 if self.player:
                     if d_y != -1:
-                        print ('man: wrong direction')
+                        # print ('man: wrong direction')
                         return False
                 else:
                     if d_y != 1:
-                        print ('man: wrong direction')
+                        # print ('man: wrong direction')
                         return False
             elif abs (d_y) == 2:
                 # check if an opponent piece is in between
@@ -166,10 +156,10 @@ class Board (View.View):
                 x_a = (pos_1[1] + pos_2[1]) // 2
                 field_a = self.board [y_a][x_a]
                 if not (field_a & FIELD and ((field_a & PLAYER) >> 1 != self.player)):
-                    print ('no opponent in between')
+                    # print ('no opponent in between')
                     return False
             else:
-                print ('invalid distance traveled')
+                # print ('invalid distance traveled')
                 return False
         # if king is moving
         else:
@@ -189,7 +179,7 @@ class Board (View.View):
                 if field & FIELD:
                     # check if its opponent
                     if (field & PLAYER)>>1 == self.player:
-                        print ('can\'t jump over own pieces', (y,x))
+                        # print ('can\'t jump over own pieces', (y,x))
                         return False
                     else:
                         pieces += 1
@@ -197,29 +187,30 @@ class Board (View.View):
                 x += dx
 
             if pieces > 1:
-                print ('jumping over too many pieces')
+                # print ('jumping over too many pieces')
                 return False
             if capturing:
                 if pieces != 1:
-                    print ('invalid capture (king)')
+                    ##  print ('invalid capture (king)')
                     return False
             else:
                 if not pieces in (0, 1):
-                    print ('invalid regular move (king)')
+                    # print ('invalid regular move (king)')
                     return False
 
         return True
 
-    def _capturesOnBoard (self):
-        captures = []
-
+    # returns True if a capture is possible,
+    # False otherwise
+    def _forceCapture (self):
         for y in range (8):
             for x in range (8):
                 field = self.board [y][x]
                 if (field & PLAYER) >> 1 == self.player:
-                    captures += self._capturesByPiece ((y,x))
+                    if self._capturesByPiece ((y,x)):
+                        return True
 
-        return captures
+        return False
 
     def _capturesByPiece (self, pos):
         captures = []
@@ -288,7 +279,13 @@ class Board (View.View):
         self.move = []
 
     def update (self):
-        pass
+        if self.player == 1:
+            computer = Computer (self)
+            self.move = computer.getMove ()
+            self._applyMove ()
+            self.player = not self.player
+
+            self.move = []
 
     def draw (self):
         gl.screen.blit (self.board_img, (0, 0))
@@ -328,3 +325,97 @@ class Board (View.View):
 
     def restore (self, backup):
         self.board = backup
+
+
+class Computer (Board):
+    def __init__ (self, board):
+        self.parent = board
+        self.board = board.board
+        self.player = board.player
+        self.move = []
+
+    def getMove (self):
+        moves = self._possibleMoves ()
+        print ('possible moves (computer):', moves)
+
+        if moves:
+            return random.choice (moves)
+        else:
+            return []
+
+    def _possibleMoves (self):
+        moves = []
+        moves += self._capturesOnBoard ()
+        if not moves:
+            moves += self._regularMovesOnBoard ()
+
+        return moves
+
+    def _capturesOnBoard (self):
+        captures = []
+
+        for y in range (8):
+            for x in range (8):
+                field = self.board [y][x]
+                if (field & PLAYER) >> 1 == self.player:
+                    captures += self._capturesByPiece ((y,x))
+
+        return captures
+
+    def _regularMovesOnBoard (self):
+        moves = []
+
+        for y in range (8):
+            for x in range (8):
+                field = self.board [y][x]
+                if (field & PLAYER) >> 1 == self.player:
+                    moves += self._regularMoveByPiece ((y,x))
+
+        return moves
+
+    def _regularMoveByPiece (self, pos):
+        captures = []
+
+        field = self.board [pos[0]][pos[1]]
+        if field & FIELD:
+            #king
+            if field & KING:
+                pass
+                # sum_xy = pos[0] + pos[1]
+                # diff_xy = pos[0] - pos[1]
+
+                # # y + x
+                # if sum_xy < 7:
+                    # y, x = sum_xy, 0
+                # else:
+                    # y, x = 7, sum_xy - 7
+                # while self._isOnBoard ((y,x)):
+                    # if self._validateSingleMove (pos, (y, x), True):
+                        # captures.append (((pos), (y,x)))
+                    # y -= 1
+                    # x += 1
+
+                # # y + x
+                # if diff_xy > 0:
+                    # y, x = diff_xy, 0
+                # else:
+                    # y, x = 0, -diff_xy
+                # while self._isOnBoard ((y,x)):
+                    # if self._validateSingleMove (pos, (y, x), True):
+                        # captures.append (((pos), (y,x)))
+                    # y += 1
+                    # x += 1
+
+            #man
+            else:
+                for d_pos in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+                    pos_2 = (pos[0] + d_pos[0], pos[1] + d_pos[1])
+                    if not self._isOnBoard (pos_2):
+                        continue
+
+                    # print ('testing: ', pos, pos_2)
+                    if self._validateSingleMove (pos, pos_2, False):
+                        # print ('here: ', pos, pos_2)
+                        captures.append ((pos, pos_2))
+
+        return captures
