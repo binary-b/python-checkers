@@ -53,7 +53,6 @@ class Board (View.View):
         if self._applyMove ():
             self.player = not self.player
             print ('correct move')
-            self.draw ()
         else:
             self.restore (backup)
             print ('incorrect move')
@@ -282,8 +281,7 @@ class Board (View.View):
         if self.player == 1:
             computer = Computer (self)
             self.move = computer.getMove ()
-            self._applyMove ()
-            self.player = not self.player
+            self.applyMove ()
 
             self.move = []
 
@@ -329,8 +327,7 @@ class Board (View.View):
 
 class Computer (Board):
     def __init__ (self, board):
-        self.parent = board
-        self.board = board.board
+        self.board = copy.deepcopy (board.board)
         self.player = board.player
         self.move = []
 
@@ -339,7 +336,9 @@ class Computer (Board):
         print ('possible moves (computer):', moves)
 
         if moves:
-            return random.choice (moves)
+            move = random.choice (moves)
+            print ('computer move')
+            return move
         else:
             return []
 
@@ -358,7 +357,34 @@ class Computer (Board):
             for x in range (8):
                 field = self.board [y][x]
                 if (field & PLAYER) >> 1 == self.player:
-                    captures += self._capturesByPiece ((y,x))
+                    captures += self._capturesByPieceRecursive ((y,x))
+
+        return captures
+
+    def _capturesByPieceRecursive (self, pos):
+        captures = []
+        captures_non_rec = self._capturesByPiece (pos)
+
+        while captures_non_rec:
+            captures_new = []
+
+            for capture in captures_non_rec:
+                backup = self.backup ()
+                self.move = capture
+                self._applyMove ()
+                captures_extra = self._capturesByPiece (capture [-1])
+                if captures_extra:
+                    print ('invalid end position in move', capture, 'captures_extra', captures_extra)
+                    for capture_2 in captures_extra:
+                        print ('here', capture + (capture_2 [-1],))
+                        captures_new.append (capture + (capture_2 [-1],))
+                        print ('captures_new (in loop):', captures_new)
+                else:
+                    captures.append (capture)
+                self.restore (backup)
+
+            print ('captures_new:', captures_new)
+            captures_non_rec = captures_new
 
         return captures
 
@@ -374,37 +400,37 @@ class Computer (Board):
         return moves
 
     def _regularMoveByPiece (self, pos):
-        captures = []
+        reg_moves = []
 
         field = self.board [pos[0]][pos[1]]
         if field & FIELD:
             #king
             if field & KING:
                 pass
-                # sum_xy = pos[0] + pos[1]
-                # diff_xy = pos[0] - pos[1]
+                sum_xy = pos[0] + pos[1]
+                diff_xy = pos[0] - pos[1]
 
-                # # y + x
-                # if sum_xy < 7:
-                    # y, x = sum_xy, 0
-                # else:
-                    # y, x = 7, sum_xy - 7
-                # while self._isOnBoard ((y,x)):
-                    # if self._validateSingleMove (pos, (y, x), True):
-                        # captures.append (((pos), (y,x)))
-                    # y -= 1
-                    # x += 1
+                # y + x
+                if sum_xy < 7:
+                    y, x = sum_xy, 0
+                else:
+                    y, x = 7, sum_xy - 7
+                while self._isOnBoard ((y,x)):
+                    if self._validateSingleMove (pos, (y, x), False):
+                        reg_moves.append (((pos), (y,x)))
+                    y -= 1
+                    x += 1
 
-                # # y + x
-                # if diff_xy > 0:
-                    # y, x = diff_xy, 0
-                # else:
-                    # y, x = 0, -diff_xy
-                # while self._isOnBoard ((y,x)):
-                    # if self._validateSingleMove (pos, (y, x), True):
-                        # captures.append (((pos), (y,x)))
-                    # y += 1
-                    # x += 1
+                # y + x
+                if diff_xy > 0:
+                    y, x = diff_xy, 0
+                else:
+                    y, x = 0, -diff_xy
+                while self._isOnBoard ((y,x)):
+                    if self._validateSingleMove (pos, (y, x), False):
+                        reg_moves.append (((pos), (y,x)))
+                    y += 1
+                    x += 1
 
             #man
             else:
@@ -416,6 +442,6 @@ class Computer (Board):
                     # print ('testing: ', pos, pos_2)
                     if self._validateSingleMove (pos, pos_2, False):
                         # print ('here: ', pos, pos_2)
-                        captures.append ((pos, pos_2))
+                        reg_moves.append ((pos, pos_2))
 
-        return captures
+        return reg_moves
