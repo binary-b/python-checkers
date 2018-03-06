@@ -24,6 +24,7 @@ class Game (View.View):
 
     def newGame (self):
         print ('starting new game')
+        self.board.reset ()
 
     def draw (self):
         gl.screen.fill (Color (70, 41, 10))
