@@ -10,6 +10,8 @@ Important!
 “new game” button is not fully tested.
 
 Usage:
+To start game type “python3 main.py” while in the
+game directory.
 If you click on a board, a field should select with
 a number on it. In order to move a piece from ex. 7b
 to 6a you have to select them in right order and
