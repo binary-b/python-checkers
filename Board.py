@@ -14,7 +14,7 @@ KING =      1 << 2      # if 0 than an ordinary man
 
 
 class Board (View.View):
-    board_start = [
+    board = [
             [0,3,0,3,0,3,0,3],
             [3,0,3,0,3,0,3,0],
             [0,3,0,3,0,3,0,3],
@@ -39,25 +39,28 @@ class Board (View.View):
         self.rect = Rect (0,0,720,720)
 
         self.player = False
+        self.ended = False
 
-        self.board = copy.deepcopy (self.board_start)
+        self.new_game_bk = self.backup ()
 
     def reset (self):
-        self.board = copy.deepcopy (self.board_start)
-        self.move = []
-        self.player = False
+        self.restore (self.new_game_bk)
 
     def applyMove (self):
         backup = self.backup ()
 
         if self._applyMove ():
             self.player = not self.player
-            print ('correct move')
+            # print ('correct move')
         else:
             self.restore (backup)
-            print ('incorrect move')
+            # print ('incorrect move')
 
         self.move = []
+
+        self.checkForEnd ()
+
+        self._upgradeToKings ()
 
     def _randomMove (self):
         x = random.randrange (64)
@@ -85,8 +88,6 @@ class Board (View.View):
         if capturing and self._capturesByPiece (self.move [-1]):
             # print ('forced capture!')
             return False
-
-        self._upgradeToKings ()
 
         return True
 
@@ -277,8 +278,18 @@ class Board (View.View):
     def cancelMove (self):
         self.move = []
 
+    def checkForEnd (self):
+        # print ('here')
+        moves = self._possibleMoves ()
+        if not moves:
+            self.ended = True
+            if self.player:
+                print ('You have won!')
+            else:
+                print ('You lost!')
+
     def update (self):
-        if self.player == 1:
+        if self.player == 1 and not self.ended:
             computer = Computer (self)
             self.move = computer.getMove ()
             self.applyMove ()
@@ -319,28 +330,14 @@ class Board (View.View):
                 self.move.append (pos)
 
     def backup (self):
-        return copy.deepcopy (self.board)
+        return (copy.deepcopy (self.board),
+                self.player,
+                self.ended)
 
     def restore (self, backup):
-        self.board = backup
-
-
-class Computer (Board):
-    def __init__ (self, board):
-        self.board = copy.deepcopy (board.board)
-        self.player = board.player
-        self.move = []
-
-    def getMove (self):
-        moves = self._possibleMoves ()
-        print ('possible moves (computer):', moves)
-
-        if moves:
-            move = random.choice (moves)
-            print ('computer move')
-            return move
-        else:
-            return []
+        self.board = backup[0]
+        self.player = backup[1]
+        self.ended = backup[2]
 
     def _possibleMoves (self):
         moves = []
@@ -365,6 +362,8 @@ class Computer (Board):
         captures = []
         captures_non_rec = self._capturesByPiece (pos)
 
+        self_move = self.move
+
         while captures_non_rec:
             captures_new = []
 
@@ -374,17 +373,19 @@ class Computer (Board):
                 self._applyMove ()
                 captures_extra = self._capturesByPiece (capture [-1])
                 if captures_extra:
-                    print ('invalid end position in move', capture, 'captures_extra', captures_extra)
+                    # print ('invalid end position in move', capture, 'captures_extra', captures_extra)
                     for capture_2 in captures_extra:
-                        print ('here', capture + (capture_2 [-1],))
+                        # print ('here', capture + (capture_2 [-1],))
                         captures_new.append (capture + (capture_2 [-1],))
-                        print ('captures_new (in loop):', captures_new)
+                        # print ('captures_new (in loop):', captures_new)
                 else:
                     captures.append (capture)
                 self.restore (backup)
 
-            print ('captures_new:', captures_new)
+            # print ('captures_new:', captures_new)
             captures_non_rec = captures_new
+
+        self.move = self_move
 
         return captures
 
@@ -445,3 +446,126 @@ class Computer (Board):
                         reg_moves.append ((pos, pos_2))
 
         return reg_moves
+
+class Computer (Board):
+    def __init__ (self, board):
+        self.board = copy.deepcopy (board.board)
+        self.player = board.player
+        self.move = []
+        self.ended = False
+
+    def getMove (self):
+        # move = self.minimax (4, True, initial=True)
+        return self.alphabeta (6, -float('inf'), float('inf'), True, initial=True)
+        # v_1 = self.alphabeta (4, -float('inf'), float('inf'), True, initial=True)
+        # v_2 = self.minimax (4, True, initial=True)
+
+        # if v_1 == v_2:
+            # print ('alphabeta and minimax are equal')
+        # else:
+            # print ('not equal!')
+
+        # return v_1
+
+    def minimax (self, depth, maximizingPlayer, initial=False):
+        if depth == 0 or self.ended:
+            return self._heuristic ()
+
+        bestMove = []
+        if maximizingPlayer:
+            maxValue = - float ('inf')
+            for move in self._possibleMoves ():
+                backup = self.backup ()
+
+                self.move = move
+                self.applyMove ()
+                value = self.minimax (depth - 1, False)
+                if maxValue < value:
+                    maxValue = value
+                    bestMove = move
+
+                self.restore (backup)
+
+            if initial:
+                return bestMove
+            return maxValue
+        else:
+            minValue = + float ('inf')
+            for move in self._possibleMoves ():
+                backup = self.backup ()
+
+                self.move = move
+                self.applyMove ()
+                value = self.minimax (depth - 1, True)
+                if minValue > value:
+                    minValue = value
+
+                self.restore (backup)
+
+            return minValue
+
+    def alphabeta (self, depth, alpha, beta, maximizingPlayer, initial=False):
+        if depth == 0 or self.ended:
+            return self._heuristic ()
+
+        bestMove = []
+        if maximizingPlayer:
+            bestValue = - float ('inf')
+
+            for move in self._possibleMoves ():
+                backup = self.backup ()
+                self.move = move
+                self.applyMove ()
+                value = self.alphabeta (depth-1, bestValue, beta, False)
+                if value > bestValue:
+                    bestValue = value
+                    bestMove = move
+                self.restore (backup)
+
+                if beta <= bestValue:
+                    break
+
+            if initial:
+                return bestMove
+
+            return bestValue
+        else:
+            bestValue = float ('inf')
+
+            for move in self._possibleMoves ():
+                backup = self.backup ()
+                self.move = move
+                self.applyMove ()
+                value = self.alphabeta (depth-1, alpha, bestValue, True)
+                if value < bestValue:
+                    bestValue = value
+                    bestMove = move
+                self.restore (backup)
+
+                if alpha >= bestValue:
+                    break
+
+            return bestValue
+
+    def _heuristic (self):
+        if self.ended:
+            if self.player == 1:
+                return - float ('inf')
+            else:
+                return + float ('inf')
+
+        value = 0
+        for row in self.board:
+            for field in row:
+                if field & FIELD:
+                    if (field & PLAYER) >> 1 == 0:
+                        sign = -1
+                    else:
+                        sign = 1
+                    
+                    if field & KING:
+                        value += 5* sign
+                    else:
+                        value += 1 * sign
+
+        return value
