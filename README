@@ -1,0 +1,28 @@
+Filip Jagiellowicz, 2064758
+
+The main points of the program are:
+  - checker logic implementation
+  - alpha-beta pruning algorithm for computer
+    decision making
+
+Important!
+“help” and “credits” buttons are just placeholders.
+“new game” button is not fully tested.
+
+Usage:
+If you click on a board, a field should select with
+a number on it. In order to move a piece from ex. 7b
+to 6a you have to select them in right order and
+press “apply move”.
+In order to clear selection “cancel move” can be used.
+
+Implemented rules:
+  - force capture;
+  - a piece must end in a position where it cannot
+    capture any further opponent pieces;
+  - after a piece reaches the farthest row it becomes
+    a king.
+    Transformation does not happend if the end row is
+    not the last place in a move;
+  - king can move freely on a single diagonal in one
+    move.
