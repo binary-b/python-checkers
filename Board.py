@@ -14,17 +14,6 @@ KING =      1 << 2      # if 0 than an ordinary man
 
 
 class Board (View.View):
-    board = [
-            [0,3,0,3,0,3,0,3],
-            [3,0,3,0,3,0,3,0],
-            [0,3,0,3,0,3,0,3],
-            [0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0],
-            [1,0,1,0,1,0,1,0],
-            [0,1,0,1,0,1,0,1],
-            [1,0,1,0,1,0,1,0]
-            ]
-
     def __init__ (self):
         self.board_img = pygame.image.load ('./img/board.png')
         self.man_w_img = pygame.image.load ('./img/white_man.png')
@@ -34,17 +23,24 @@ class Board (View.View):
         self.rect_trans = pygame.image.load ('./img/rect_transparent.png')
 
         self.font = pygame.font.Font ('./fonts/AnonymousPro-Regular.ttf', 70)
-
-        self.move = []
         self.rect = Rect (0,0,720,720)
 
-        self.player = False
-        self.ended = False
-
-        self.new_game_bk = self.backup ()
+        self.reset ()
 
     def reset (self):
-        self.restore (self.new_game_bk)
+        self.board = [
+                [0,3,0,3,0,3,0,3],
+                [3,0,3,0,3,0,3,0],
+                [0,3,0,3,0,3,0,3],
+                [0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0],
+                [1,0,1,0,1,0,1,0],
+                [0,1,0,1,0,1,0,1],
+                [1,0,1,0,1,0,1,0]
+                ]
+        self.player = False
+        self.ended = False
+        self.move = []
 
     def applyMove (self):
         backup = self.backup ()
