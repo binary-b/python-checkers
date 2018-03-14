@@ -19,6 +19,12 @@ class Game (View.View):
                 Button.Button ((730,gl.screen_res[1] -75), 'btn_quit.png', gl.quit)
                 ]
 
+        self.status = [
+                pygame.image.load ('img/status_in_progress.png'),
+                pygame.image.load ('img/status_lost.png'),
+                pygame.image.load ('img/status_won.png')
+                ]
+
     def update (self):
         self.board.update ()
 
@@ -31,6 +37,12 @@ class Game (View.View):
         self.board.draw ()
         for btn in self.btns:
             btn.draw ()
+
+        pos = (730, 10)
+        if not self.board.ended:
+            gl.screen.blit (self.status[0], pos)
+        else:
+            gl.screen.blit (self.status[1+self.board.player], pos)
 
     def event (self, ev):
         for btn in self.btns:

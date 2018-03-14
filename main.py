@@ -24,7 +24,7 @@ while True:
 
         if ev.type == KEYDOWN:
             if ev.key == K_F3:
-                pygame.image.save (gl.screen, 'screenshoots/' + datetime.datetime.now ().strftime ('%Y_%m_%d_%H_%M_%S'))
+                pygame.image.save (gl.screen, 'screenshoots/' + datetime.datetime.now ().strftime ('%Y_%m_%d_%H_%M_%S') + '.png')
 
     if not gl.view:
         break

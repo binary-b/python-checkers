@@ -279,10 +279,6 @@ class Board (View.View):
         moves = self._possibleMoves ()
         if not moves:
             self.ended = True
-            if self.player:
-                print ('You have won!')
-            else:
-                print ('You lost!')
 
     def update (self):
         if self.player == 1 and not self.ended:
