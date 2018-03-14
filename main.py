@@ -2,6 +2,8 @@
 import pygame
 from pygame.locals import *
 
+import datetime
+
 import globals as gl
 import Game
 
@@ -19,6 +21,10 @@ while True:
             break
         else:
             gl.view.event (ev)
+
+        if ev.type == KEYDOWN:
+            if ev.key == K_F3:
+                pygame.image.save (gl.screen, 'screenshoots/' + datetime.datetime.now ().strftime ('%Y_%m_%d_%H_%M_%S'))
 
     if not gl.view:
         break
