@@ -15,7 +15,7 @@ class Game (View.View):
                 Button.Button ((730,gl.screen_res[1] -375), 'btn_apply_move.png', self.board.applyMove),
                 Button.Button ((730,gl.screen_res[1] -300), 'btn_cancel_move.png', self.board.cancelMove),
                 Button.Button ((730,gl.screen_res[1] -225), 'btn_help.png', lambda:gl.openWithSystemDefault ('docs/help.pdf')),
-                Button.Button ((730,gl.screen_res[1] -150), 'btn_credits.png', lambda:print ('press')),
+                Button.Button ((730,gl.screen_res[1] -150), 'btn_credits.png', lambda:gl.openWithSystemDefault ('docs/credits.pdf')),
                 Button.Button ((730,gl.screen_res[1] -75), 'btn_quit.png', gl.quit)
                 ]
 

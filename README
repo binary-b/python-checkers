@@ -1,30 +1,28 @@
-Filip Jagiellowicz, 2064758
+Copyright © 2018 Filip Jagiełłowicz
 
-The main points of the program are:
-  - checker logic implementation
-  - alpha-beta pruning algorithm for computer
-    decision making
+The project is released under MIT license (see LICENSE file
+in the same folder).
 
-Important!
-“help” and “credits” buttons are just placeholders.
-“new game” button is not fully tested.
+Errors:
+If you find any error in the game please report it to
+binary_b@protonmail.com.
 
-Usage:
-To start game type “python3 main.py” while in the
-game directory.
-If you click on a board, a field should select with
-a number on it. In order to move a piece from ex. 7b
-to 6a you have to select them in right order and
-press “apply move”.
-In order to clear selection “cancel move” can be used.
+WARNING:
+The game have been tested only under Linux. Although it
+should work under Microsoft Windows and XOS some problems
+may occur. If so let me know (binary_b@protonmail.com).
 
-Implemented rules:
-  - force capture;
-  - a piece must end in a position where it cannot
-    capture any further opponent pieces;
-  - after a piece reaches the farthest row it becomes
-    a king.
-    Transformation does not happend if the end row is
-    not the last place in a move;
-  - king can move freely on a single diagonal in one
-    move.
+Dependences:
+  - Python 3.6.4
+  - Pygame 1.9.4
+  - properly set default pdf reader program
+
+Starting game:
+In order to start the game type “python3 main.py” while in
+the game folder.
+
+Help:
+See “docs/help.pdf”.
+
+Credits:
+Check “docs/credits.pdf” out.

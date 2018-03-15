@@ -447,17 +447,7 @@ class Computer (Board):
         self.ended = False
 
     def getMove (self):
-        # move = self.minimax (4, True, initial=True)
         return self.alphabeta (6, -float('inf'), float('inf'), True, initial=True)
-        # v_1 = self.alphabeta (4, -float('inf'), float('inf'), True, initial=True)
-        # v_2 = self.minimax (4, True, initial=True)
-
-        # if v_1 == v_2:
-            # print ('alphabeta and minimax are equal')
-        # else:
-            # print ('not equal!')
-
-        # return v_1
 
     def minimax (self, depth, maximizingPlayer, initial=False):
         if depth == 0 or self.ended:
